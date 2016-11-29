@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
+
 # TODO: fill this in based on where you saved the training and testing data
 training_file = 'train.p'
 testing_file = 'test.p'
@@ -42,16 +43,9 @@ print("Number of testing examples =", n_test)
 print("Image data shape =", image_shape)
 print("Number of classes =", n_classes)
 
-
 ### Preprocess the data here.
 ### Feel free to use as many code cells as needed.
 from sklearn.preprocessing import OneHotEncoder
-def grayscale(img):
-	"""Applies the Grayscale transform
-	This will return an image with only one color channel
-	but NOTE: to see the returned image as grayscale
-	you should call plt.imshow(gray, cmap='gray')"""
-	return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 def OHE_labels(Y_tr,N_classes):
     OHC = OneHotEncoder()
@@ -139,12 +133,11 @@ def conv_net(x, weights, biases):
 learning_rate = 0.001
 batch_size = 512
 # training_epochs = 30
-training_epochs = 4
+training_epochs = 30
 
 # tf Graph input
 x = tf.placeholder("float", [None, 32, 32, 3])
 y = tf.placeholder("float", [None, n_classes])
-
 
 # define all the variables and functions
 logits = conv_net(x, weights, biases)
