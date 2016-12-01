@@ -210,9 +210,9 @@ def image_feature():
         image = mpimg.imread(os.path.join("webresized/", f))
         # # Load image data as 1 dimensional array
         # # We're using float32 to save on memory space
-        # feature = np.array(image, dtype=np.float32)
+        feature = np.array(image, dtype=np.float32)
 
-        features.append(image)
+        features.append(feature)
 
     return np.array(features)
 
@@ -237,24 +237,14 @@ with tf.Session() as sess:
 
 # features is new images
 # Create TensorFlow object, y_pred, called tensor
-# x = tf.placeholder("float", shape=(None, None, 3))
-# y = tf.nn.softmax(logits)
-
-# topFive=tf.nn.top_k(y, k=5, sorted=True, name=None)
-# # Run the tf.nn.top_k operation in the session
-# with tf.Session() as session:
-#     _, op = session.run([y, topFive], feed_dict={x: features})
-#     print(op)
-
-#x = tf.placeholder("float", shape=[None, 32, 32, 3])
+x = tf.placeholder("float", shape=(None, None, 3))
 y = tf.nn.softmax(logits)
-# for feed one image_x shape of (32, 32, 3)
-image_x1 = features[0].reshape(1, 32, 32, 3)
 
 topFive=tf.nn.top_k(y, k=5, sorted=True, name=None)
+# Run the tf.nn.top_k operation in the session
+session = tf.Session()
+_, op = session.run([y, topFive], feed_dict={x: features})
+print(op)
 
-with tf.Session() as session:
-    top5_prob, top5_cls = session.run([y, topFive], feed_dict = {x: image_x1})
-    print(top5_prob)
-    print(top5_cls)
+
 
