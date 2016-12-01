@@ -3,6 +3,12 @@ import pickle
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
+import os
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+import cv2
+from PIL import Image
+import numpy as np
 
 
 # TODO: fill this in based on where you saved the training and testing data
@@ -42,6 +48,7 @@ print("Number of training examples =", n_train)
 print("Number of testing examples =", n_test)
 print("Image data shape =", image_shape)
 print("Number of classes =", n_classes)
+print("X_Train type", type(X_train[0]))
 
 ### Preprocess the data here.
 ### Feel free to use as many code cells as needed.
@@ -133,7 +140,7 @@ def conv_net(x, weights, biases):
 learning_rate = 0.001
 batch_size = 512
 # training_epochs = 30
-training_epochs = 30
+training_epochs = 1
 
 # tf Graph input
 x = tf.placeholder("float", [None, 32, 32, 3])
@@ -177,3 +184,77 @@ with tf.Session() as sess:
     print(
         "Accuracy:",
         accuracy.eval({x: X_valid, y: valid_labels}))
+
+def resize():
+    images = os.listdir("webimages/")
+    for f in images:
+        #reading in an image
+        image = mpimg.imread(os.path.join("webimages/", f))
+        print('This image is:', type(image), 'with dimesions:', image.shape)
+        rows,cols,ch = image.shape
+        r = 32.0 / image.shape[1]
+        dim = (32, int(image.shape[0] * r))
+
+        # perform the actual resizing of the image and show it
+        resized = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+        print('resized:', resized.shape)
+        cv2.imwrite(os.path.join("webresized",f), resized)
+
+def image_feature():
+    features = []
+
+    images = os.listdir("webresized/")
+
+    for f in images:
+        # Check if the file is a directory
+        image = mpimg.imread(os.path.join("webresized/", f))
+        # # Load image data as 1 dimensional array
+        # # We're using float32 to save on memory space
+        # feature = np.array(image, dtype=np.float32)
+
+        features.append(image)
+
+    return np.array(features)
+
+resize()
+features = image_feature()
+
+# for feature in features:
+#     print(feature.shape)
+#     print(feature)
+#     plt.imshow(feature)
+# plt.show()
+
+feature = tf.placeholder("float", [None, None, 3])
+
+prob = tf.nn.softmax(feature)
+
+with tf.Session() as sess:
+    #print("softmax probabilities")
+    for f1 in features:
+        print(sess.run(prob, feed_dict={feature: f1}))
+
+
+# features is new images
+# Create TensorFlow object, y_pred, called tensor
+# x = tf.placeholder("float", shape=(None, None, 3))
+# y = tf.nn.softmax(logits)
+
+# topFive=tf.nn.top_k(y, k=5, sorted=True, name=None)
+# # Run the tf.nn.top_k operation in the session
+# with tf.Session() as session:
+#     _, op = session.run([y, topFive], feed_dict={x: features})
+#     print(op)
+
+#x = tf.placeholder("float", shape=[None, 32, 32, 3])
+y = tf.nn.softmax(logits)
+# for feed one image_x shape of (32, 32, 3)
+image_x1 = features[0].reshape(1, 32, 32, 3)
+
+topFive=tf.nn.top_k(y, k=5, sorted=True, name=None)
+
+with tf.Session() as session:
+    top5_prob, top5_cls = session.run([y, topFive], feed_dict = {x: image_x1})
+    print(top5_prob)
+    print(top5_cls)
+
