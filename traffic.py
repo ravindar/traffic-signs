@@ -1,6 +1,6 @@
 import math
 import pickle
-import numpy as np
+
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 import os
@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import cv2
 from PIL import Image
 import numpy as np
+from scipy.misc import imresize
 
 
 # TODO: fill this in based on where you saved the training and testing data
@@ -191,12 +192,13 @@ def resize():
         #reading in an image
         image = mpimg.imread(os.path.join("webimages/", f))
         print('This image is:', type(image), 'with dimesions:', image.shape)
+        resized= imresize(image,(32, 32))
         rows,cols,ch = image.shape
-        r = 32.0 / image.shape[1]
-        dim = (32, int(image.shape[0] * r))
-
-        # perform the actual resizing of the image and show it
-        resized = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+        # r = 32.0 / image.shape[1]
+        # dim = (32, int(image.shape[0] * r))
+        #
+        # # perform the actual resizing of the image and show it
+        # resized = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
         print('resized:', resized.shape)
         cv2.imwrite(os.path.join("webresized",f), resized)
 
@@ -211,7 +213,8 @@ def image_feature():
         # # Load image data as 1 dimensional array
         # # We're using float32 to save on memory space
         feature = np.array(image, dtype=np.float32)
-
+        # image = np.reshape(feature, (1, 32, 32, 3))
+        print(feature.shape)
         features.append(feature)
 
     return np.array(features)
@@ -219,32 +222,27 @@ def image_feature():
 resize()
 features = image_feature()
 
-# for feature in features:
-#     print(feature.shape)
-#     print(feature)
-#     plt.imshow(feature)
-# plt.show()
+t1 = tf.placeholder("float", [32, 32, 3])
 
-feature = tf.placeholder("float", [None, None, 3])
-
-prob = tf.nn.softmax(feature)
+prob = tf.nn.softmax(t1)
 
 with tf.Session() as sess:
     #print("softmax probabilities")
     for f1 in features:
-        print(sess.run(prob, feed_dict={feature: f1}))
+        print(sess.run(prob, feed_dict={t1: f1}))
 
 
-# features is new images
-# Create TensorFlow object, y_pred, called tensor
-x = tf.placeholder("float", shape=(None, None, 3))
-y = tf.nn.softmax(logits)
+init_op = tf.initialize_all_variables()
+prediction = tf.nn.softmax(logits)
+topFive=tf.nn.top_k(prediction, k=5, sorted=True, name=None)
+top_k_feed_dict = {x: features}
 
-topFive=tf.nn.top_k(y, k=5, sorted=True, name=None)
 # Run the tf.nn.top_k operation in the session
-session = tf.Session()
-_, op = session.run([y, topFive], feed_dict={x: features})
-print(op)
-
-
+with tf.Session() as session:
+    session.run(init_op)
+    top_k_probabilities_per_image = session.run(topFive, feed_dict=top_k_feed_dict)
+    values = np.array([top_k_probabilities_per_image.values])
+    indices = np.array([top_k_probabilities_per_image.indices])
+    print(values)
+    print(indices)
 
