@@ -10,7 +10,7 @@ import cv2
 from PIL import Image
 import numpy as np
 from scipy.misc import imresize
-
+import pandas as pd
 
 # TODO: fill this in based on where you saved the training and testing data
 training_file = 'train.p'
@@ -204,7 +204,7 @@ def resize():
 
 def image_feature():
     features = []
-
+    labels = []
     images = os.listdir("webresized/")
 
     for f in images:
@@ -215,12 +215,21 @@ def image_feature():
         feature = np.array(image, dtype=np.float32)
         # image = np.reshape(feature, (1, 32, 32, 3))
         print(feature.shape)
+        if(f == 'Children crossing.jpg'):
+            labels.append(28)
+        else:
+            labels.append(-1)
         features.append(feature)
 
-    return np.array(features)
+    return np.array(features), np.array(labels)
 
 resize()
-features = image_feature()
+features, labels = image_feature()
+
+images = os.listdir("webimages/")
+for f in images:
+    pil_im = Image.open(os.path.join("webimages/", f), 'r')
+
 
 t1 = tf.placeholder("float", [32, 32, 3])
 
